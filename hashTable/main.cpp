@@ -21,8 +21,15 @@ typedef struct DataStruct {
 	char name[10];
 	unsigned char score[6];
 	float average;
-	//int hValue = 0;
+	int hValue = 0;
 } DataStruct;
+
+typedef struct Temp {
+	char id[10];
+	char name[10];
+	unsigned char score[6];
+	float average;
+} Temp;
 
 static string FileNumber = "0";
 static int Count = 0;
@@ -42,7 +49,7 @@ public:
 
         while ( input.getline( rBuf, 255, '\n' ) ) {
             string temp ;
-            DataStruct tempData ;
+            Temp tempData ;
             int cNo = 0, pre = 0, pos = 0 ;
 
             Count++ ;
@@ -70,7 +77,8 @@ public:
 	} // ReadTxt()
 
 	void ReadBin() {
-	    DataStruct tempData ;
+	    Temp tempData ;
+	    DataStruct data ;
 	    int studentNo = 0 ;
 
         input.seekg( 0, input.end ) ;
@@ -80,46 +88,133 @@ public:
         for ( int i = 0 ; i < studentNo ; i++ ) {
             input.read( (char *)&tempData, sizeof(tempData) ) ;
             cout << "[" << i+1 << "]" << tempData.id << ", " << tempData.name << endl ;
+            strcpy( data.id, tempData.id ) ;
+            strcpy( data.name, tempData.name ) ;
+            for ( int j = 0 ; j < 6 ; j++ ) data.score[j] = tempData.score[j] ;
+            data.average = tempData.average ;
+            dataBase.push_back( data ) ;
         } // print
+
+        cout << endl ;
 	} // ReadBin()
 };
 
 class function2 : public function1 {
 public:
+
 	int FindPrimeNumber( int dataSize ) {
 		for ( bool findprime = false; findprime != true; dataSize++ ) {
 			for ( int i = 2; i <= dataSize; i++ ) {
 				if ( dataSize % i == 0 ) {
-					if ( dataSize == i ) findprime = true;
-					else break;
+					if ( dataSize == i ) {
+                        findprime = true ;
+                        return dataSize ;
+					} // return
+					else break ;
 				}  // if
 			} // for
 		} // for
 
-		return dataSize;
+		return dataSize ;
 	} //FindPrimeNumber()
 
-	int getHValue( char id[10] ) {
-		int hValue = 0;
-		for ( int i = 0; i < 7; i++ ) hValue = hValue * (int)id[i];
+	unsigned long long getHValue( char id[10] ) {
+		unsigned long long hValue = 1 ;
+
+		for ( int i = 0 ; i < 8 ; i++ ) {
+            if ( id[i] != '\0' )
+                hValue = hValue * (int)id[i];
+		} // multiply the id
+
 		return hValue;
 	} //getHvalue
 
 	void BuildHashTableX() {
-		float size = (dataBase.size() * 1.2);
-		DataStruct X[FindPrimeNumber( (int)size )];
+		float size = (dataBase.size() * 1.2) ;
+		size = FindPrimeNumber( (int)size ) ;
+		vector<DataStruct> X ;
+		X.resize( (int)size ) ;
+        int tempHValue = 0 ;
 
 		for ( int i = 0; i < dataBase.size(); i++ ) {
-			int tempHValue = getHValue( dataBase[i].id ) % (int)size;
-			//dataBase[i].hValue = tempHValue;
-			X[tempHValue] = dataBase[i];
+			tempHValue = getHValue( dataBase[i].id ) % (int)size ;
+
+			//cout << tempHValue << endl ;
+
+			dataBase[i].hValue = tempHValue ;
+			while( X[tempHValue].hValue != 0 ) {
+                    tempHValue ++ ;
+                    if( tempHValue == size ) tempHValue = tempHValue - (int)size ;
+			} // while
+			X[tempHValue] = dataBase[i] ;
 		} // put into hashTable
 
+		// for ( int i = 0 ; i < X.size() ; i++ ) cout << X[i].id << " " << X[i].name << " " << (int)X[i].score[0] << " " << X[i].average << endl ;
+		cout << "Hash Table X has been created." << endl << endl ;
+		PrintHashTable( size, X ) ;
 	} // BuildHashTableX()
+
+	void PrintHashTable( int TableSize, vector<DataStruct> X ) {
+        output.open( ("linear"+FileNumber+".txt").c_str(), fstream::out ) ;
+        output << " --- Hash Table X --- (linear probing)" << endl ;
+
+	    for( int i = 0 ; i < TableSize ; i++ ) {
+            if ( i < 10 ) output << "[  " << i << "]" ;
+            else if ( i >= 10 ) output << "[ " << i << "]" ;
+            if ( X[i].hValue != 0 ) {
+                if ( X[i].hValue < 10 ) output << "          " << X[i].hValue ;
+                else if ( X[i].hValue >= 10 ) output << "         " << X[i].hValue ;
+                if ( X[i].id[7] != '\0' ) output << ",   " ;
+                else if ( X[i].id[7] == '\0' ) output << ",    " ;
+                output << X[i].id << ",\t\t" << X[i].name << ",\t\t" << X[i].average << endl ;
+            } // if()
+            else output << endl ;
+	    } // for
+	} // PrintHashTable()
 };
 
 class function3 : public function2 {
+public:
+    void BuildHashTableY() {
+		float size = (dataBase.size() * 1.2 );
+		size = FindPrimeNumber( (int)size ) ;
+		vector<DataStruct> Y ;
+		Y.resize( (int)size ) ;
+        int tempHValue = 0 ;
 
+		for ( int i = 0; i < dataBase.size(); i++ ) {
+			int tempHValue = getHValue( dataBase[i].id ) % (int)size;
+
+			dataBase[i].hValue = tempHValue;
+			if( Y[tempHValue].hValue != 0 ) {
+                int highestStep = FindPrimeNumber( (int)(dataBase.size() / 3) );
+                tempHValue = highestStep - ( getHValue( dataBase[i].id ) % highestStep );
+			} // step
+			while( Y[tempHValue].hValue != 0 ) {
+                    tempHValue += tempHValue;
+                    if( tempHValue >= size ) tempHValue = tempHValue - size;
+			} // while
+			Y[tempHValue] = dataBase[i];
+		} // put into hashTable
+		cout << "Hash Table Y has been created." << endl << endl ;
+		PrintHashTable( size, Y ) ;
+	} // BuildHashTableY()
+
+	void PrintHashTable( int TableSize, vector<DataStruct> X ) {
+        output.open( ("double"+FileNumber+".txt").c_str(), fstream::out ) ;
+        output << " --- Hash Table Y --- (double hashing)" << endl ;
+
+	    for( int i = 0 ; i < TableSize ; i++ ) {
+            if ( i < 10 ) output << "[  " << i << "]" ;
+            else if ( i >= 10 ) output << "[ " << i << "]" ;
+            if ( X[i].hValue != 0 ) {
+                if ( X[i].hValue < 10 ) output << "          " << X[i].hValue ;
+                else if ( X[i].hValue >= 10 ) output << "         " << X[i].hValue ;
+                output << ",   " << X[i].id << ",      " << X[i].name << ",      " << X[i].average << endl ;
+            } // if()
+            else output << endl ;
+	    } // for
+	} // PrintHashTable()
 };
 
 int main() {
@@ -151,7 +246,7 @@ int main() {
 			continueOrNot = true;
 		} // wrong command
 
-		else if ( Command == 1 ) { // read, count and build
+		else if ( Command == 1 ) {
 			bool function1Confirm = false;
 
 			do {
@@ -194,36 +289,78 @@ int main() {
 			output.close() ;
 			Count = 0;
 			FileNumber = "0";
-		} // function 1
+		} // text2Binary or readBinary
 
 		else if ( Command == 2 ) {
 			bool function2Confirm = false;
 
 			do {
-				cout << "Please enter the file you want to build a AVL Tree or [0] to quit:" << endl;
-				cin >> FileNumber;
+				cout << "Please enter the file you want to proceed a linear probing or [0] to quit:" << endl;
+				cin >> FileNumber ;
 
 				if ( FileNumber == "0" ) {
-					function2Confirm = true;
-					continueOrNot = true;
+					function2Confirm = true ;
+					continueOrNot = true ;
 				} // quit
 
 				else {
-					string fileName = "input" + FileNumber + ".txt";
-					if ( 1 ) {
-						function2Confirm = true;
-						continueOrNot = true;
+					string fileName = "input" + FileNumber + ".bin" ;
+					input.open( fileName.c_str(), fstream::in | fstream::binary ) ;
+
+					if ( input.is_open() ) {
+                        Two.ReadBin() ;
+                        Two.BuildHashTableX() ;
+						function2Confirm = true ;
+						continueOrNot = true ;
 					} // open successfully
-					else cout << "*****  " << fileName << " does not exist!  *****" << endl;
+
+					else {
+                        cout << "*****  " << fileName << " does not exist!  *****" << endl ;
+                        cout << "*****  Please proceed function 1 first !   *****" << endl ;
+					} // open failed
 				} // open file and input data to BST
 			} while ( !function2Confirm );
 
+            input.close() ;
+			output.close() ;
 			Count = 0;
 			FileNumber = "0";
-		} // AVL Tree
+		} // linear probing
 
 		else if ( Command == 3 ) {
-			;
-		}
+			bool function3Confirm = false;
+
+			do {
+				cout << "Please enter the file you want to proceed a double hash or [0] to quit:" << endl;
+				cin >> FileNumber ;
+
+				if ( FileNumber == "0" ) {
+					function3Confirm = true ;
+					continueOrNot = true ;
+				} // quit
+
+				else {
+					string fileName = "input" + FileNumber + ".bin" ;
+					input.open( fileName.c_str(), fstream::in | fstream::binary ) ;
+
+					if ( input.is_open() ) {
+                        Three.ReadBin() ;
+                        Three.BuildHashTableY() ;
+						function3Confirm = true ;
+						continueOrNot = true ;
+					} // open successfully
+
+					else {
+                        cout << "*****  " << fileName << " does not exist!  *****" << endl ;
+                        cout << "*****  Please proceed function 1 first !   *****" << endl ;
+					} // open failed
+				} // open file and input data to BST
+			} while ( !function3Confirm );
+
+            input.close() ;
+			output.close() ;
+			Count = 0;
+			FileNumber = "0";
+		} // double hashing
 	} while ( continueOrNot );
 } // main()
