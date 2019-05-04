@@ -77,6 +77,7 @@ public:
 	} // ReadTxt()
 
 	void ReadBin() {
+        dataBase.clear();
 		Temp tempData;
 		DataStruct data;
 		int studentNo = 0;
@@ -153,26 +154,30 @@ public:
 		} // put into hashTable
 
 		// for ( int i = 0 ; i < X.size() ; i++ ) cout << X[i].id << " " << X[i].name << " " << (int)X[i].score[0] << " " << X[i].average << endl ;
-		cout << "Hash Table X has been created." << endl << endl;
+		cout << "Hash Table X has been created." << endl;
 		average = (float)times / (float)dataBase.size();
 		UnsuccessfulSearch( X );
-		cout << "successful search: " << average << " comparisons on average " << endl;
+		cout << "successful search: " << average << " comparisons on average." << endl<< endl;
 		PrintHashTable( size, X );
 	} // BuildHashTableX()
 
 	void UnsuccessfulSearch( vector<DataStruct> table ) {
+        int j = 0;
 		int times = 0;
 		float average = 0;
 		for ( int i = 0; i < table.size(); i++ ) {
-			for ( int j = i; table[j].hValue != 0; j++ ) {
-				times++;
-				if ( j == table.size() ) j = 0;
-			} // for
+            j = i;
+			while ( 1 ) {
+				if ( j == table.size() )    j = 0;
+                if ( table[j].hValue == 0 ) break;
+                j++;
+                times++;
+			} // while
+
 		} // for
 
-		cout << times << endl;
 		average = (float)times / (float)table.size();
-		cout << "unsuccessful search: " << average << " comparisons on average " << endl;
+		cout << "unsuccessful search: " << average << " comparisons on average." << endl;
 	} // UnsuccessfulSearch()
 
 	void PrintHashTable( int TableSize, vector<DataStruct> X ) {
@@ -225,9 +230,9 @@ public:
 			} // while
 			Y[tempHValue] = dataBase[i];
 		} // put into hashTable
-		cout << "Hash Table Y has been created." << endl << endl;
+		cout << "Hash Table Y has been created." << endl;
 		average = (float)times / (float)dataBase.size();
-		cout << "successful search: " << average << " comparisons on average " << endl;
+		cout << "successful search: " << average << " comparisons on average." << endl << endl;
 		PrintHashTable( size, Y );
 	} // BuildHashTableY()
 
