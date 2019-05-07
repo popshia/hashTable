@@ -1,4 +1,4 @@
-// 10627130 林冠良 & 10627131 李峻瑋 // Visual Studio Community 2019
+// 10627130 ªL«a¨} & 10627131 §õ®mÞ³ // Code Blocks 17.12
 #define _CRT_SECURE_NO_DEPRECATE
 #include <iostream>
 #include <sstream>
@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <time.h>
+#include <math.h>
 
 using namespace std;
 
@@ -168,7 +169,7 @@ public:
 		for ( int i = 0; i < table.size(); i++ ) {
             j = i;
 			while ( 1 ) {
-				if ( j == table.size() )    j = 0;
+				if ( j == table.size() ) j = 0;
                 if ( table[j].hValue == 0 ) break;
                 j++;
                 times++;
@@ -253,6 +254,102 @@ public:
 	} // PrintHashTable()
 };
 
+class function4 : public function2 {
+public:
+	void BuildHashTableZ() {
+		float size = ( dataBase.size() * 1.2 ) + 1;
+		size = FindPrimeNumber( (int)size );
+		vector<DataStruct> Z;
+		Z.resize( (int)size );
+		int tempHValue = 0;
+		int step = 1;
+		int times = 0;
+		int save = 0;
+		int plusN = 0;
+		float average = 0;
+
+		for ( int i = 0; i < dataBase.size(); i++ ) {
+			int tempHValue = getHValue( dataBase[i].id ) % (int)size;
+
+			dataBase[i].hValue = tempHValue;
+
+			times++;
+			save = tempHValue;
+			plusN = 1;
+			step = 1;
+
+            if ( Z[tempHValue].hValue == 0 ) {
+                    Z[tempHValue] = dataBase[i];
+                    continue;
+            } // block is empty
+
+			while ( Z[tempHValue].hValue !=0 && plusN <=(Z.size()-1)/2 ) {
+
+				tempHValue = save+step; // plus
+				times++;
+				if ( tempHValue >= Z.size() ) {
+                    tempHValue = tempHValue - Z.size();
+                    if ( Z[tempHValue].hValue == 0 ) {
+                        Z[tempHValue] = dataBase[i];
+                        break;
+                    }
+				} // out of bound
+				else {
+                    if ( Z[tempHValue].hValue == 0 ) {
+                        Z[tempHValue] = dataBase[i];
+                        break;
+                    }
+				} // !out of bound
+
+				/*tempHValue = save-step; // minus
+				times++;
+				if ( tempHValue < 0 ) {
+                    tempHValue = size - tempHValue;
+                    if ( Z[tempHValue].hValue == 0 ) {
+                        Z[tempHValue] = dataBase[i];
+                        break;
+                    }
+				} // less than zero
+				else {
+                    if ( Z[tempHValue].hValue == 0 ) {
+                        Z[tempHValue] = dataBase[i];
+                        break;
+                    }
+				} // !less than zero*/
+
+                plusN++;
+				step = plusN*plusN;
+				cout<< step<< endl;
+				if ( step >= Z.size() ) step = step % Z.size();
+				//cout<< step<<endl;
+				times++;
+			} // while
+		} // put into hashTable
+
+
+		cout << "Hash Table Z has been created." << endl;
+		average = (float)times / (float)dataBase.size();
+		cout << "successful search: " << average << " comparisons on average." << endl << endl;
+		PrintHashTable( size, Z );
+	} // BuildHashTableY()
+
+	void PrintHashTable( int TableSize, vector<DataStruct> X ) {
+		output.open( ( "quadratic" + FileNumber + ".txt" ).c_str(), fstream::out );
+		output << " --- Hash Table Z --- (quadratic probing)" << endl;
+
+		for ( int i = 0; i < TableSize; i++ ) {
+			if ( i < 10 ) output << "[  " << i << "]";
+			else if ( i >= 10 ) output << "[ " << i << "]";
+			if ( X[i].hValue != 0 ) {
+				if ( X[i].hValue < 10 ) output << "          " << X[i].hValue;
+				else if ( X[i].hValue >= 10 ) output << "         " << X[i].hValue;
+				output << ",   " << X[i].id << ",      " << X[i].name << ",      " << X[i].average << endl;
+			} // if()
+			else output << endl;
+		} // for
+	} // PrintHashTable()
+};
+
 int main() {
 	bool continueOrNot = false;
 
@@ -260,12 +357,14 @@ int main() {
 		function1 One;
 		function2 Two;
 		function3 Three;
+		function4 Four;
 		cout << "**********************************************" << endl; // welcome message
 		cout << "*****               DS2ex03              *****" << endl;
 		cout << "***** 0 : Quit                           *****" << endl;
 		cout << "***** 1 : Read and convert data          *****" << endl;
 		cout << "***** 2 : Linear probing                 *****" << endl;
 		cout << "***** 3 : Double hash                    *****" << endl;
+		cout << "***** 4 : Quadratic probing              *****" << endl;
 		cout << "**********************************************" << endl;
 		cout << endl << "Please enter your choice:" << endl;
 
@@ -277,7 +376,7 @@ int main() {
 			return 0;
 		} // quit
 
-		else if ( Command > 3 || Command < 0 ) {
+		else if ( Command > 4 || Command < 0 ) {
 			cout << "Error command! please enter an acceptable command:" << endl << endl;
 			continueOrNot = true;
 		} // wrong command
@@ -398,5 +497,41 @@ int main() {
 			Count = 0;
 			FileNumber = "0";
 		} // double hashing
+
+		else if ( Command == 4 ) {
+			bool function4Confirm = false;
+
+			do {
+				cout << "Please enter the file you want to proceed a quadratic probing or [0] to quit:" << endl;
+				cin >> FileNumber;
+
+				if ( FileNumber == "0" ) {
+					function4Confirm = true;
+					continueOrNot = true;
+				} // quit
+
+				else {
+					string fileName = "input" + FileNumber + ".bin";
+					input.open( fileName.c_str(), fstream::in | fstream::binary );
+
+					if ( input.is_open() ) {
+						Four.ReadBin();
+						Four.BuildHashTableZ();
+						function4Confirm = true;
+						continueOrNot = true;
+					} // open successfully
+
+					else {
+						cout << "*****  " << fileName << " does not exist!  *****" << endl;
+						cout << "*****  Please proceed function 1 first !   *****" << endl;
+					} // open failed
+				} // open file and input data to build hash y
+			} while ( !function4Confirm );
+
+			input.close();
+			output.close();
+			Count = 0;
+			FileNumber = "0";
+		} // quadratic probing
 	} while ( continueOrNot );
-} // main()
+} // main
